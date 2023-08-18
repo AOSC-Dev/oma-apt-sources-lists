@@ -35,11 +35,16 @@ impl FromStr for SourcesList {
 impl SourcesList {
     pub fn new<P: AsRef<Path>>(path: P) -> SourceResult<Self> {
         let path = path.as_ref();
-        let data = fs::read_to_string(path)
-            .map_err(|why| SourceError::SourcesListOpen { path: path.to_path_buf(), why })?;
-        let mut sources_file = data.parse::<SourcesList>().map_err(|why| {
-            SourceError::SourcesList { path: path.to_path_buf(), why: Box::new(why) }
+        let data = fs::read_to_string(path).map_err(|why| SourceError::SourcesListOpen {
+            path: path.to_path_buf(),
+            why,
         })?;
+        let mut sources_file =
+            data.parse::<SourcesList>()
+                .map_err(|why| SourceError::SourcesList {
+                    path: path.to_path_buf(),
+                    why: Box::new(why),
+                })?;
 
         sources_file.path = path.to_path_buf();
         Ok(sources_file)
@@ -55,22 +60,25 @@ impl SourcesList {
         })
     }
 
-    pub fn get_entries_mut<'a>(&'a mut self, entry: &'a str) -> impl Iterator<Item = &mut SourceEntry> + 'a {
-        self.lines
-            .iter_mut()
-            .filter_map(move |line| {
-                if let SourceLine::Entry(ref mut e) = line {
-                    if entry == e.url {
-                        return Some(e);
-                    }
+    pub fn get_entries_mut<'a>(
+        &'a mut self,
+        entry: &'a str,
+    ) -> impl Iterator<Item = &mut SourceEntry> + 'a {
+        self.lines.iter_mut().filter_map(move |line| {
+            if let SourceLine::Entry(ref mut e) = line {
+                if entry == e.url {
+                    return Some(e);
                 }
+            }
 
-                None
-            })
+            None
+        })
     }
 
     pub fn is_active(&self) -> bool {
-        self.lines.iter().any(|line| if let SourceLine::Entry(_) = line { true } else { false })
+        self.lines
+            .iter()
+            .any(|line| matches!(line, SourceLine::Entry(_)))
     }
 
     pub fn write_sync(&mut self) -> io::Result<()> {
@@ -138,14 +146,22 @@ impl SourcesLists {
 
     /// When given a list of paths to source lists, this will attempt to parse them.
     pub fn new_from_paths<P: AsRef<Path>, I: Iterator<Item = P>>(paths: I) -> SourceResult<Self> {
-        let files = paths.map(SourcesList::new).collect::<SourceResult<Vec<SourcesList>>>()?;
+        let files = paths
+            .map(SourcesList::new)
+            .collect::<SourceResult<Vec<SourcesList>>>()?;
 
-        Ok(SourcesLists { modified: Vec::with_capacity(files.len()), files })
+        Ok(SourcesLists {
+            modified: Vec::with_capacity(files.len()),
+            files,
+        })
     }
 
     /// Specify to enable or disable a repo. `true` is returned if the repo was found.
     pub fn repo_modify(&mut self, repo: &str, enabled: bool) -> bool {
-        let &mut Self { ref mut modified, ref mut files } = self;
+        let &mut Self {
+            ref mut modified,
+            ref mut files,
+        } = self;
 
         let iterator = files
             .iter_mut()
@@ -164,18 +180,23 @@ impl SourcesLists {
 
     /// Constructs an iterator of enabled source entries from a sources list.
     pub fn entries(&self) -> impl Iterator<Item = &SourceEntry> {
-        self.iter().flat_map(|list| list.lines.iter()).filter_map(move |entry| {
-            if let SourceLine::Entry(entry) = entry {
-                return Some(entry);
-            }
+        self.iter()
+            .flat_map(|list| list.lines.iter())
+            .filter_map(move |entry| {
+                if let SourceLine::Entry(entry) = entry {
+                    return Some(entry);
+                }
 
-            None
-        })
+                None
+            })
     }
 
     /// A callback-based iterator that tracks which files have been modified.
     pub fn entries_mut<F: FnMut(&mut SourceEntry) -> bool>(&mut self, mut func: F) {
-        let &mut Self { ref mut files, ref mut modified } = self;
+        let &mut Self {
+            ref mut files,
+            ref mut modified,
+        } = self;
         for (pos, list) in files.iter_mut().enumerate() {
             for entry in &mut list.lines {
                 if let SourceLine::Entry(entry) = entry {
@@ -198,7 +219,10 @@ impl SourcesLists {
         entry: SourceEntry,
     ) -> SourceResult<()> {
         let path = path.as_ref();
-        let &mut Self { ref mut modified, ref mut files } = self;
+        let &mut Self {
+            ref mut modified,
+            ref mut files,
+        } = self;
 
         for (id, list) in files.iter_mut().enumerate() {
             if list.path == path {
@@ -212,14 +236,20 @@ impl SourcesLists {
             }
         }
 
-        files.push(SourcesList { path: path.to_path_buf(), lines: vec![SourceLine::Entry(entry)] });
+        files.push(SourcesList {
+            path: path.to_path_buf(),
+            lines: vec![SourceLine::Entry(entry)],
+        });
 
         Ok(())
     }
 
     /// Remove the source entry from each file in the sources lists.
     pub fn remove_entry(&mut self, repo: &str) {
-        let &mut Self { ref mut modified, ref mut files } = self;
+        let &mut Self {
+            ref mut modified,
+            ref mut files,
+        } = self;
         for (id, list) in files.iter_mut().enumerate() {
             if let Some(line) = list.contains_entry(repo) {
                 list.lines.remove(line);
@@ -233,7 +263,10 @@ impl SourcesLists {
     /// Changes are only applied in-memory. Use `SourcesLists::wirte_sync` to write
     /// all changes to the disk.
     pub fn dist_replace(&mut self, from_suite: &str, to_suite: &str) {
-        let &mut Self { ref mut modified, ref mut files } = self;
+        let &mut Self {
+            ref mut modified,
+            ref mut files,
+        } = self;
         for (id, file) in files.iter_mut().enumerate() {
             let mut changed = false;
             for line in &mut file.lines {
@@ -255,7 +288,12 @@ impl SourcesLists {
     ///
     /// Files are copied to "$path.save" before being overwritten. On failure, these backup files
     /// will be used to restore the original list.
-    pub fn dist_upgrade(&mut self, retain: &HashSet<Box<str>>, from_suite: &str, to_suite: &str) -> io::Result<()> {
+    pub fn dist_upgrade(
+        &mut self,
+        retain: &HashSet<Box<str>>,
+        from_suite: &str,
+        to_suite: &str,
+    ) -> io::Result<()> {
         fn newfile(modified: &mut Vec<PathBuf>, path: &Path) -> io::Result<File> {
             let backup_path = path
                 .file_name()
@@ -291,7 +329,10 @@ impl SourcesLists {
 
                 for line in list.lines.iter_mut() {
                     if let SourceLine::Entry(entry) = line {
-                        if !retain.contains(entry.url.as_str()) && entry.url.starts_with("http") && entry.suite.starts_with(from_suite) {
+                        if !retain.contains(entry.url.as_str())
+                            && entry.url.starts_with("http")
+                            && entry.suite.starts_with(from_suite)
+                        {
                             entry.suite = entry.suite.replace(from_suite, to_suite);
                         }
                     }
@@ -347,8 +388,13 @@ impl SourcesLists {
 
     /// Overwrite all files which were modified.
     pub fn write_sync(&mut self) -> io::Result<()> {
-        let &mut Self { ref mut modified, ref mut files } = self;
-        modified.drain(..).map(|id| files[id as usize].write_sync()).collect()
+        let &mut Self {
+            ref mut modified,
+            ref mut files,
+        } = self;
+        modified
+            .drain(..)
+            .try_for_each(|id| files[id as usize].write_sync())
     }
 }
 

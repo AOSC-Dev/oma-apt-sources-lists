@@ -8,7 +8,11 @@ pub enum SourceError {
     Io(io::Error),
     #[error(display = "missing field in apt source list: '{}'", field)]
     MissingField { field: &'static str },
-    #[error(display = "invalid field in apt source list: '{}' is invalid for '{}'", value, field)]
+    #[error(
+        display = "invalid field in apt source list: '{}' is invalid for '{}'",
+        value,
+        field
+    )]
     InvalidValue { field: &'static str, value: String },
     #[error(display = "entry did not exist in sources")]
     EntryNotFound,
@@ -17,7 +21,10 @@ pub enum SourceError {
     #[error(display = "source file was not found")]
     FileNotFound,
     #[error(display = "failed to parse source list at {:?}: {}", path, why)]
-    SourcesList { path: PathBuf, why: Box<SourcesListError> },
+    SourcesList {
+        path: PathBuf,
+        why: Box<SourcesListError>,
+    },
     #[error(display = "failed to open / read source list at {:?}: {}", path, why)]
     SourcesListOpen { path: PathBuf, why: io::Error },
 }

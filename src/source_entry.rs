@@ -30,7 +30,13 @@ impl fmt::Display for SourceEntry {
             write!(fmt, "[{}] ", options)?;
         }
 
-        write!(fmt, "{} {} {}", self.url, self.suite, self.components.join(" "))
+        write!(
+            fmt,
+            "{} {} {}",
+            self.url,
+            self.suite,
+            self.components.join(" ")
+        )
     }
 }
 
@@ -43,18 +49,26 @@ impl FromStr for SourceEntry {
 
         let mut fields = line.split_whitespace();
 
-        let source = match fields.next().ok_or(SourceError::MissingField { field: "source" })? {
+        let source = match fields
+            .next()
+            .ok_or(SourceError::MissingField { field: "source" })?
+        {
             "deb" => false,
             "deb-src" => true,
             other => {
-                return Err(SourceError::InvalidValue { field: "source", value: other.to_owned() })
+                return Err(SourceError::InvalidValue {
+                    field: "source",
+                    value: other.to_owned(),
+                })
             }
         };
 
-        let field = fields.next().ok_or(SourceError::MissingField { field: "url" })?;
-        if field.starts_with('[') {
+        let field = fields
+            .next()
+            .ok_or(SourceError::MissingField { field: "url" })?;
+        if let Some(field) = field.strip_prefix('[') {
             let mut leftover: Option<String> = None;
-            let mut field: String = field[1..].into();
+            let mut field = field.to_string();
 
             if let Some(pos) = field.find(']') {
                 if pos == field.len() - 1 {
@@ -65,8 +79,9 @@ impl FromStr for SourceEntry {
                 }
             } else {
                 loop {
-                    let next =
-                        fields.next().ok_or(SourceError::MissingField { field: "option" })?;
+                    let next = fields
+                        .next()
+                        .ok_or(SourceError::MissingField { field: "option" })?;
                     if let Some(pos) = next.find(']') {
                         field.push_str(&next[..pos]);
                         if pos != next.len() - 1 {
@@ -83,7 +98,10 @@ impl FromStr for SourceEntry {
 
             url = match leftover {
                 Some(field) => field,
-                None => fields.next().ok_or(SourceError::MissingField { field: "url" })?.into(),
+                None => fields
+                    .next()
+                    .ok_or(SourceError::MissingField { field: "url" })?
+                    .into(),
             };
         } else {
             url = field.into();
@@ -93,13 +111,23 @@ impl FromStr for SourceEntry {
             options = None;
         }
 
-        let suite = fields.next().ok_or(SourceError::MissingField { field: "suite" })?.into();
+        let suite = fields
+            .next()
+            .ok_or(SourceError::MissingField { field: "suite" })?
+            .into();
 
         for field in fields {
             components.push(field.into());
         }
 
-        Ok(SourceEntry { enabled: true, source, url, suite, components, options })
+        Ok(SourceEntry {
+            enabled: true,
+            source,
+            url,
+            suite,
+            components,
+            options,
+        })
     }
 }
 
@@ -120,7 +148,7 @@ impl SourceEntry {
             url = &url[pos..];
         }
 
-        url.replace("/", "_")
+        url.replace('/', "_")
     }
 
     /// Returns the root URL for this entry's dist path.
@@ -146,11 +174,11 @@ impl SourceEntry {
     }
 
     /// Iterator that returns each of the dist components that are to be fetched.
-    pub fn dist_components<'a>(&'a self) -> impl Iterator<Item = String> + 'a {
+    pub fn dist_components(&self) -> impl Iterator<Item = String> + '_ {
         let url = self.url();
         self.components
             .iter()
-            .map(move |component| [url, "/dists/", &self.suite, "/", &component].concat())
+            .map(move |component| [url, "/dists/", &self.suite, "/", component].concat())
     }
 
     /// Returns the root URL for this entry's pool path.

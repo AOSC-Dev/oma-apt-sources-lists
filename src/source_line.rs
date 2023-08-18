@@ -24,9 +24,13 @@ impl FromStr for SourceLine {
     type Err = SourceError;
     fn from_str(line: &str) -> Result<Self, Self::Err> {
         let line = line.trim();
-        if line.starts_with('#') {
-            let inner = line[1..].trim();
-            let entry = if !inner.is_empty() { line.parse::<SourceEntry>().ok() } else { None };
+        if let Some(inner) = line.strip_prefix('#') {
+            let inner = inner.trim();
+            let entry = if !inner.is_empty() {
+                line.parse::<SourceEntry>().ok()
+            } else {
+                None
+            };
 
             Ok(entry.map_or_else(
                 || SourceLine::Comment(line.into()),

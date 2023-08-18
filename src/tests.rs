@@ -33,8 +33,8 @@ fn sources_lists() -> SourcesLists {
         modified: Vec::new(),
         files: vec![
             SOURCE_LIST.parse::<SourcesList>().expect("source list gen"),
-            POP_PPA.parse::<SourcesList>().expect("pop ppa gen")
-        ]
+            POP_PPA.parse::<SourcesList>().expect("pop ppa gen"),
+        ],
     }
 }
 
@@ -43,8 +43,10 @@ fn sources_lists_pop_disabled() -> SourcesLists {
         modified: Vec::new(),
         files: vec![
             SOURCE_LIST.parse::<SourcesList>().expect("source list gen"),
-            POP_PPA_DISABLED.parse::<SourcesList>().expect("pop ppa gen")
-        ]
+            POP_PPA_DISABLED
+                .parse::<SourcesList>()
+                .expect("pop ppa gen"),
+        ],
     }
 }
 
@@ -53,12 +55,16 @@ fn disable_sources() {
     let mut lists = sources_lists();
 
     lists.repo_modify("http://apt.pop-os.org/proprietary", false);
-    let proprietary = lists.entries()
+    let proprietary = lists
+        .entries()
         .find(|e| e.url == "http://apt.pop-os.org/proprietary")
         .expect("failed to find proprietary PPA");
 
     assert!(!proprietary.enabled);
-    assert_eq!("# deb http://apt.pop-os.org/proprietary disco main", &format!("{}", proprietary));
+    assert_eq!(
+        "# deb http://apt.pop-os.org/proprietary disco main",
+        &format!("{}", proprietary)
+    );
 }
 
 #[test]
@@ -66,12 +72,16 @@ fn enable_sources() {
     let mut lists = sources_lists_pop_disabled();
 
     lists.repo_modify("http://apt.pop-os.org/proprietary", true);
-    let proprietary = lists.entries()
+    let proprietary = lists
+        .entries()
         .find(|e| e.url == "http://apt.pop-os.org/proprietary")
         .expect("failed to find proprietary PPA");
 
     assert!(proprietary.enabled);
-    assert_eq!("deb http://apt.pop-os.org/proprietary disco main", &format!("{}", proprietary));
+    assert_eq!(
+        "deb http://apt.pop-os.org/proprietary disco main",
+        &format!("{}", proprietary)
+    );
 }
 
 #[test]
@@ -126,7 +136,10 @@ fn source() {
 fn fluff() {
     let comment = "# deb-src http://us.archive.ubuntu.com/ubuntu/ cosmic main \
                    restricted universe multiverse";
-    assert_eq!(SourceLine::from_str(comment).unwrap(), SourceLine::Comment(comment.into()));
+    assert_eq!(
+        SourceLine::from_str(comment).unwrap(),
+        SourceLine::Comment(comment.into())
+    );
 
     assert_eq!(SourceLine::from_str("").unwrap(), SourceLine::Empty);
 }
