@@ -1,6 +1,4 @@
-extern crate apt_sources_lists;
-
-use apt_sources_lists::*;
+use oma_apt_sources_lists::*;
 
 pub fn main() {
     let list = SourcesLists::scan().unwrap();
