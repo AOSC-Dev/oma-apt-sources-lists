@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v0.1.0 (2023-08-18)
 
+<csr-id-c2d237db5c0a4a802bf3c53f2d94518b61a64875/>
+<csr-id-0df4611ec7293010551f95659f28f1b1da9cc0c8/>
+<csr-id-10595046b4bff922fe47e313ddb9db49047635e9/>
+<csr-id-b757a9a4f3b1ffadc9d05f6133ce4b59e0623fe7/>
+<csr-id-658ccc1a4ced1670885e95467a77d6b8c1f87fa1/>
+
 ### Chore
 
  - <csr-id-c2d237db5c0a4a802bf3c53f2d94518b61a64875/> use 2021 edition and remove upstream rustfmt.toml and toolchain
@@ -14,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - <csr-id-0df4611ec7293010551f95659f28f1b1da9cc0c8/> Update dependencies
  - <csr-id-10595046b4bff922fe47e313ddb9db49047635e9/> Upgrade reqwest dependency
  - <csr-id-b757a9a4f3b1ffadc9d05f6133ce4b59e0623fe7/> Upgrade Rust to 1.35.0
+
+### Chore
+
+ - <csr-id-49dd2c48094a838bae10e5a699be40df0dac83d5/> add changelog
 
 ### New Features
 
@@ -31,8 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <csr-read-only-do-not-edit/>
 
- - 23 commits contributed to the release over the course of 1744 calendar days.
- - 7 commits were understood as [conventional](https://www.conventionalcommits.org).
+ - 24 commits contributed to the release over the course of 1744 calendar days.
+ - 8 commits were understood as [conventional](https://www.conventionalcommits.org).
  - 0 issues like '(#ID)' were seen in commit messages
 
 ### Commit Details
@@ -42,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <details><summary>view details</summary>
 
  * **Uncategorized**
+    - Add changelog ([`49dd2c4`](https://github.com/AOSC-Dev/oma-apt-sources-lists/commit/49dd2c48094a838bae10e5a699be40df0dac83d5))
     - Use 2021 edition and remove upstream rustfmt.toml and toolchain ([`c2d237d`](https://github.com/AOSC-Dev/oma-apt-sources-lists/commit/c2d237db5c0a4a802bf3c53f2d94518b61a64875))
     - Update dependencies ([`0df4611`](https://github.com/AOSC-Dev/oma-apt-sources-lists/commit/0df4611ec7293010551f95659f28f1b1da9cc0c8))
     - Add callback-based entries iterator for SourcesLists ([`1268de4`](https://github.com/AOSC-Dev/oma-apt-sources-lists/commit/1268de431fb64af45cf6e301509092ea5e225f5b))
