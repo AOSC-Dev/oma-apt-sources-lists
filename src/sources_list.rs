@@ -131,17 +131,14 @@ impl SourcesLists {
     ///
     /// Note that this will parse every source list into memory before returning.
     pub fn scan() -> SourceResult<Self> {
-        let mut paths = vec![PathBuf::from("/etc/apt/sources.list")];
+        scan_inner("/")
+    }
 
-        for entry in fs::read_dir("/etc/apt/sources.list.d/")? {
-            let entry = entry?;
-            let path = entry.path();
-            if path.extension().map_or(false, |e| e == "list") {
-                paths.push(path);
-            }
-        }
-
-        Self::new_from_paths(paths.iter())
+    /// Scans every file in **/etc/apt/sources.list.d**, including **/etc/apt/sources.list**. (from root argument)
+    ///
+    /// Note that this will parse every source list into memory before returning.
+    pub fn scan_from_root<P: AsRef<Path>>(root: P) -> SourceResult<Self> {
+        scan_inner(root)
     }
 
     /// When given a list of paths to source lists, this will attempt to parse them.
@@ -396,6 +393,21 @@ impl SourcesLists {
             .drain(..)
             .try_for_each(|id| files[id as usize].write_sync())
     }
+}
+
+fn scan_inner<P: AsRef<Path>>(dir: P) -> Result<SourcesLists, SourceError> {
+    let dir = dir.as_ref();
+    let mut paths = vec![dir.join("etc/apt/sources.list")];
+
+    for entry in fs::read_dir(dir.join("etc/apt/sources.list.d/"))? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.extension().map_or(false, |e| e == "list") {
+            paths.push(path);
+        }
+    }
+
+    SourcesLists::new_from_paths(paths.iter())
 }
 
 fn add_modified(modified: &mut Vec<u16>, list: u16) {
