@@ -25,41 +25,45 @@ impl FromStr for SourceListDeb822 {
         let mut entries = vec![];
 
         for i in p {
-            let entry = SourceEntry {
-                enabled: true,
-                source: i
-                    .fields
-                    .iter()
-                    .find(|x| x.name == "Types")
-                    .map(|x| x.value != "deb")
-                    .unwrap_or(false),
-                options: deb822_options(&i),
-                url: i
-                    .fields
-                    .iter()
-                    .find(|x| x.name == "URIs")
-                    .map(|x| x.value.to_string())
-                    .ok_or(SourceError::MissingField { field: "URIs" })?,
-                suite: i
-                    .fields
-                    .iter()
-                    .find(|x| x.name == "Suites")
-                    .map(|x| x.value.to_string())
-                    .ok_or(SourceError::MissingField { field: "Suites" })?,
-                components: i
-                    .fields
-                    .iter()
-                    .find(|x| x.name == "Components")
-                    .map(|x| x.value.to_string())
-                    .ok_or(SourceError::MissingField {
-                        field: "Components",
-                    })?
-                    .split_ascii_whitespace()
-                    .map(|x| x.to_string())
-                    .collect::<Vec<_>>(),
-            };
+            for j in i
+                .fields
+                .iter()
+                .find(|x| x.name == "Suites")
+                .map(|x| x.value.to_string())
+                .ok_or(SourceError::MissingField { field: "Suites" })?
+                .split_ascii_whitespace()
+            {
+                let entry = SourceEntry {
+                    enabled: true,
+                    source: i
+                        .fields
+                        .iter()
+                        .find(|x| x.name == "Types")
+                        .map(|x| x.value != "deb")
+                        .unwrap_or(false),
+                    options: deb822_options(&i),
+                    url: i
+                        .fields
+                        .iter()
+                        .find(|x| x.name == "URIs")
+                        .map(|x| x.value.to_string())
+                        .ok_or(SourceError::MissingField { field: "URIs" })?,
+                    suite: j.to_string(),
+                    components: i
+                        .fields
+                        .iter()
+                        .find(|x| x.name == "Components")
+                        .map(|x| x.value.to_string())
+                        .ok_or(SourceError::MissingField {
+                            field: "Components",
+                        })?
+                        .split_ascii_whitespace()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<_>>(),
+                };
 
-            entries.push(entry);
+                entries.push(entry);
+            }
         }
 
         Ok(Self { entries })
