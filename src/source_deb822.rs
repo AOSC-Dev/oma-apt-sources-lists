@@ -122,7 +122,7 @@ fn deb822_options(i: &Paragraph) -> Option<String> {
 }
 
 #[test]
-fn test() {
+fn test_parse_deb822() {
     let sources = SourceListDeb822::from_str(
         r"Types: deb
 URIs: https://mirrors.ustc.edu.cn/ubuntu
@@ -186,5 +186,71 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                 }
             ]
         }
+    );
+}
+
+#[test]
+fn test_serialize_deb822() {
+    let sources = SourceListDeb822 {
+        entries: vec![
+            SourceEntry {
+                enabled: true,
+                source: false,
+                options: Some(
+                    "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string(),
+                ),
+                url: "https://mirrors.ustc.edu.cn/ubuntu".to_string(),
+                suite: "noble".to_string(),
+                components: vec![
+                    "main".to_string(),
+                    "restricted".to_string(),
+                    "universe".to_string(),
+                    "multiverse".to_string(),
+                ],
+                is_deb822: true,
+            },
+            SourceEntry {
+                enabled: true,
+                source: false,
+                options: Some(
+                    "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string(),
+                ),
+                url: "https://mirrors.ustc.edu.cn/ubuntu".to_string(),
+                suite: "noble-updates".to_string(),
+                components: vec![
+                    "main".to_string(),
+                    "restricted".to_string(),
+                    "universe".to_string(),
+                    "multiverse".to_string(),
+                ],
+                is_deb822: true,
+            },
+            SourceEntry {
+                enabled: true,
+                source: false,
+                options: Some(
+                    "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string(),
+                ),
+                url: "https://mirrors.ustc.edu.cn/ubuntu".to_string(),
+                suite: "noble-backports".to_string(),
+                components: vec![
+                    "main".to_string(),
+                    "restricted".to_string(),
+                    "universe".to_string(),
+                    "multiverse".to_string(),
+                ],
+                is_deb822: true,
+            },
+        ],
+    };
+
+    assert_eq!(
+        sources.to_string(),
+        r#"Types: deb
+URIs: https://mirrors.ustc.edu.cn/ubuntu
+Suites: noble noble-updates noble-backports 
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+"#
     );
 }
