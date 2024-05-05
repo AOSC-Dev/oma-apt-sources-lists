@@ -26,17 +26,17 @@ impl fmt::Display for SourceEntry {
             // deb822 的情况跟 lines 的情况不一样
             // deb822 是一个结构体内放好几个 suite
             // 而 lines 只能放一个
-            todo!()
+            Err(fmt::Error)
         } else {
             if !self.enabled {
                 fmt.write_str("# ")?;
             }
-    
+
             fmt.write_str(if self.source { "deb-src " } else { "deb " })?;
             if let Some(ref options) = self.options.as_ref() {
                 write!(fmt, "[{}] ", options)?;
             }
-    
+
             write!(
                 fmt,
                 "{} {} {}",
