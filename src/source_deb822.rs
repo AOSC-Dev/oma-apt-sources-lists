@@ -13,14 +13,14 @@ impl fmt::Display for SourceListDeb822 {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let mut uris = vec![];
         for i in &self.entries {
-            if uris.contains(&(&i.url, i.source)) {
+            if uris.contains(&(&i.url, i.source, &i.options)) {
                 continue;
             }
 
             writeln!(fmt, "Types: {}", if i.source { "deb-src" } else { "deb" })?;
             writeln!(fmt, "URIs: {}", i.url)?;
 
-            uris.push((&i.url, i.source));
+            uris.push((&i.url, i.source, &i.options));
 
             let suites = self
                 .entries
