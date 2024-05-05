@@ -13,6 +13,7 @@ mod errors;
 mod source_entry;
 mod source_line;
 mod sources_list;
+pub mod source_deb822;
 
 #[cfg(test)]
 mod tests;

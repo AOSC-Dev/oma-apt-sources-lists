@@ -396,9 +396,14 @@ impl SourcesLists {
 }
 
 fn scan_inner<P: AsRef<Path>>(dir: P) -> Result<SourcesLists, SourceError> {
+    let paths = sources_list(dir)?;
+
+    SourcesLists::new_from_paths(paths.iter())
+}
+
+pub(crate) fn sources_list<P: AsRef<Path>>(dir: P) -> Result<Vec<PathBuf>, SourceError> {
     let dir = dir.as_ref();
     let mut paths = vec![dir.join("etc/apt/sources.list")];
-
     for entry in fs::read_dir(dir.join("etc/apt/sources.list.d/"))? {
         let entry = entry?;
         let path = entry.path();
@@ -407,7 +412,7 @@ fn scan_inner<P: AsRef<Path>>(dir: P) -> Result<SourcesLists, SourceError> {
         }
     }
 
-    SourcesLists::new_from_paths(paths.iter())
+    Ok(paths)
 }
 
 fn add_modified(modified: &mut Vec<u16>, list: u16) {

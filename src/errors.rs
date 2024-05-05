@@ -27,6 +27,8 @@ pub enum SourceError {
     },
     #[error(display = "failed to open / read source list at {:?}: {}", path, why)]
     SourcesListOpen { path: PathBuf, why: io::Error },
+    #[error(display = "Syntax Error: {}", why)]
+    SyntaxError { why: String },
 }
 
 #[derive(Debug, Error)]
