@@ -25,7 +25,7 @@ impl fmt::Display for SourceListDeb822 {
             let suites = self
                 .entries
                 .iter()
-                .filter(|x| x.url == i.url)
+                .filter(|x| x.url == i.url && i.source == x.source && i.options == x.options)
                 .map(|x| x.suite.clone());
             write!(fmt, "Suites: ")?;
             for i in suites {
