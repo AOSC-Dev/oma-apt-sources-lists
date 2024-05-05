@@ -17,26 +17,34 @@ pub struct SourceEntry {
     pub suite: String,
     /// Components that have been enabled for this repo.
     pub components: Vec<String>,
+    pub is_deb822: bool,
 }
 
 impl fmt::Display for SourceEntry {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        if !self.enabled {
-            fmt.write_str("# ")?;
+        if self.is_deb822 {
+            // deb822 的情况跟 lines 的情况不一样
+            // deb822 是一个结构体内放好几个 suite
+            // 而 lines 只能放一个
+            todo!()
+        } else {
+            if !self.enabled {
+                fmt.write_str("# ")?;
+            }
+    
+            fmt.write_str(if self.source { "deb-src " } else { "deb " })?;
+            if let Some(ref options) = self.options.as_ref() {
+                write!(fmt, "[{}] ", options)?;
+            }
+    
+            write!(
+                fmt,
+                "{} {} {}",
+                self.url,
+                self.suite,
+                self.components.join(" ")
+            )
         }
-
-        fmt.write_str(if self.source { "deb-src " } else { "deb " })?;
-        if let Some(ref options) = self.options.as_ref() {
-            write!(fmt, "[{}] ", options)?;
-        }
-
-        write!(
-            fmt,
-            "{} {} {}",
-            self.url,
-            self.suite,
-            self.components.join(" ")
-        )
     }
 }
 
@@ -127,6 +135,7 @@ impl FromStr for SourceEntry {
             suite,
             components,
             options,
+            is_deb822: false,
         })
     }
 }

@@ -1,3 +1,5 @@
+use self::source_deb822::SourceListDeb822;
+
 use super::*;
 use std::collections::HashSet;
 use std::fmt::{self, Display, Formatter};
@@ -7,28 +9,45 @@ use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct SourcesList {
     pub path: PathBuf,
-    pub lines: Vec<SourceLine>,
+    pub entries: SourceListType,
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub enum SourceListType {
+    SourceLine(Vec<SourceLine>),
+    Deb822(SourceListDeb822),
 }
 
 impl FromStr for SourcesList {
     type Err = SourcesListError;
     fn from_str(input: &str) -> Result<Self, Self::Err> {
-        let mut source_list = Self::default();
-        for (no, line) in input.lines().enumerate() {
-            let entry = line
-                .parse::<SourceLine>()
-                .map_err(|why| SourcesListError::BadLine { line: no, why })?;
+        match SourceListDeb822::from_str(input) {
+            Ok(res) => Ok(SourcesList {
+                path: PathBuf::from(""),
+                entries: SourceListType::Deb822(res),
+            }),
+            Err(_) => {
+                let mut entries = vec![];
+                for (no, line) in input.lines().enumerate() {
+                    let entry = line
+                        .parse::<SourceLine>()
+                        .map_err(|why| SourcesListError::BadLine { line: no, why })?;
 
-            // Prevent duplicate entries.
-            if !source_list.lines.contains(&entry) {
-                source_list.lines.push(entry);
+                    // Prevent duplicate entries.
+                    if !entries.contains(&entry) {
+                        entries.push(entry);
+                    }
+                }
+
+                Ok(SourcesList {
+                    path: PathBuf::from(""),
+                    entries: SourceListType::SourceLine(entries),
+                })
             }
         }
-
-        Ok(source_list)
     }
 }
 
@@ -51,34 +70,54 @@ impl SourcesList {
     }
 
     pub fn contains_entry(&self, entry: &str) -> Option<usize> {
-        self.lines.iter().position(|line| {
-            if let SourceLine::Entry(e) = line {
-                entry == e.url
-            } else {
-                false
-            }
-        })
+        let elem = &self.entries;
+        match elem {
+            SourceListType::SourceLine(lines) => lines.iter().position(|e| {
+                if let SourceLine::Entry(e) = e {
+                    e.url == entry
+                } else {
+                    false
+                }
+            }),
+            SourceListType::Deb822(e) => e.entries.iter().position(|x| x.url == entry),
+        }
     }
 
     pub fn get_entries_mut<'a>(
         &'a mut self,
         entry: &'a str,
-    ) -> impl Iterator<Item = &mut SourceEntry> + 'a {
-        self.lines.iter_mut().filter_map(move |line| {
-            if let SourceLine::Entry(ref mut e) = line {
-                if entry == e.url {
-                    return Some(e);
-                }
-            }
+    ) -> Box<dyn Iterator<Item = &mut SourceEntry> + 'a> {
+        match self.entries {
+            SourceListType::SourceLine(ref mut line) => {
+                Box::new(line.iter_mut().filter_map(move |line| {
+                    if let SourceLine::Entry(ref mut e) = line {
+                        if entry == e.url {
+                            return Some(e);
+                        }
+                    }
 
-            None
-        })
+                    None
+                }))
+            }
+            SourceListType::Deb822(ref mut e) => {
+                Box::new(e.entries.iter_mut().filter_map(move |e| {
+                    if entry == e.url {
+                        return Some(e);
+                    }
+
+                    None
+                }))
+            }
+        }
     }
 
     pub fn is_active(&self) -> bool {
-        self.lines
-            .iter()
-            .any(|line| matches!(line, SourceLine::Entry(_)))
+        match &self.entries {
+            SourceListType::SourceLine(line) => {
+                line.iter().any(|line| matches!(line, SourceLine::Entry(_)))
+            }
+            SourceListType::Deb822(e) => !e.entries.is_empty(),
+        }
     }
 
     pub fn write_sync(&mut self) -> io::Result<()> {
@@ -97,8 +136,17 @@ impl SourcesList {
 
 impl Display for SourcesList {
     fn fmt(&self, fmt: &mut Formatter) -> fmt::Result {
-        for line in &self.lines {
-            writeln!(fmt, "{}", line)?;
+        match &self.entries {
+            SourceListType::SourceLine(lines) => {
+                for line in lines {
+                    writeln!(fmt, "{}", line)?;
+                }
+            }
+            SourceListType::Deb822(e) => {
+                for entry in &e.entries {
+                    writeln!(fmt, "{}", entry)?;
+                }
+            }
         }
 
         Ok(())
@@ -178,13 +226,17 @@ impl SourcesLists {
     /// Constructs an iterator of enabled source entries from a sources list.
     pub fn entries(&self) -> impl Iterator<Item = &SourceEntry> {
         self.iter()
-            .flat_map(|list| list.lines.iter())
-            .filter_map(move |entry| {
-                if let SourceLine::Entry(entry) = entry {
-                    return Some(entry);
+            .flat_map(|list| -> Box<dyn Iterator<Item = &SourceEntry>> {
+                match &list.entries {
+                    SourceListType::SourceLine(lines) => Box::new(lines.iter().filter_map(|x| {
+                        if let SourceLine::Entry(entry) = x {
+                            return Some(entry);
+                        } else {
+                            None
+                        }
+                    })),
+                    SourceListType::Deb822(e) => Box::new(e.entries.iter()),
                 }
-
-                None
             })
     }
 
@@ -195,10 +247,21 @@ impl SourcesLists {
             ref mut modified,
         } = self;
         for (pos, list) in files.iter_mut().enumerate() {
-            for entry in &mut list.lines {
-                if let SourceLine::Entry(entry) = entry {
-                    if func(entry) {
-                        add_modified(modified, pos as u16)
+            match list.entries {
+                SourceListType::SourceLine(ref mut lines) => {
+                    for entry in lines {
+                        if let SourceLine::Entry(entry) = entry {
+                            if func(entry) {
+                                add_modified(modified, pos as u16)
+                            }
+                        }
+                    }
+                }
+                SourceListType::Deb822(ref mut e) => {
+                    for entry in &mut e.entries {
+                        if func(entry) {
+                            add_modified(modified, pos as u16)
+                        }
                     }
                 }
             }
@@ -224,8 +287,22 @@ impl SourcesLists {
         for (id, list) in files.iter_mut().enumerate() {
             if list.path == path {
                 match list.contains_entry(&entry.url) {
-                    Some(pos) => list.lines[pos] = SourceLine::Entry(entry),
-                    None => list.lines.push(SourceLine::Entry(entry)),
+                    Some(pos) => match list.entries {
+                        SourceListType::SourceLine(ref mut lines) => {
+                            lines[pos] = SourceLine::Entry(entry)
+                        }
+                        SourceListType::Deb822(ref mut e) => {
+                            e.entries[pos] = entry;
+                        }
+                    },
+                    None => match list.entries {
+                        SourceListType::SourceLine(ref mut lines) => {
+                            lines.push(SourceLine::Entry(entry))
+                        }
+                        SourceListType::Deb822(ref mut e) => {
+                            e.entries.push(entry);
+                        }
+                    },
                 }
 
                 add_modified(modified, id as u16);
@@ -235,7 +312,7 @@ impl SourcesLists {
 
         files.push(SourcesList {
             path: path.to_path_buf(),
-            lines: vec![SourceLine::Entry(entry)],
+            entries: SourceListType::SourceLine(vec![SourceLine::Entry(entry)]),
         });
 
         Ok(())
@@ -249,7 +326,14 @@ impl SourcesLists {
         } = self;
         for (id, list) in files.iter_mut().enumerate() {
             if let Some(line) = list.contains_entry(repo) {
-                list.lines.remove(line);
+                match list.entries {
+                    SourceListType::SourceLine(ref mut lines) => {
+                        lines.remove(line);
+                    }
+                    SourceListType::Deb822(ref mut e) => {
+                        e.entries.remove(line);
+                    }
+                }
                 add_modified(modified, id as u16);
             }
         }
@@ -266,11 +350,23 @@ impl SourcesLists {
         } = self;
         for (id, file) in files.iter_mut().enumerate() {
             let mut changed = false;
-            for line in &mut file.lines {
-                if let SourceLine::Entry(ref mut entry) = line {
-                    if entry.suite.starts_with(from_suite) {
-                        entry.suite = entry.suite.replace(from_suite, to_suite);
-                        changed = true;
+            match file.entries {
+                SourceListType::SourceLine(ref mut lines) => {
+                    for line in lines {
+                        if let SourceLine::Entry(ref mut entry) = line {
+                            if entry.suite.starts_with(from_suite) {
+                                entry.suite = entry.suite.replace(from_suite, to_suite);
+                                changed = true;
+                            }
+                        }
+                    }
+                }
+                SourceListType::Deb822(ref mut e) => {
+                    for entry in &mut e.entries {
+                        if entry.suite.starts_with(from_suite) {
+                            entry.suite = entry.suite.replace(from_suite, to_suite);
+                            changed = true;
+                        }
                     }
                 }
             }
@@ -324,17 +420,33 @@ impl SourcesLists {
             for list in sources.iter_mut() {
                 let mut current_file = newfile(modified, &list.path)?;
 
-                for line in list.lines.iter_mut() {
-                    if let SourceLine::Entry(entry) = line {
-                        if !retain.contains(entry.url.as_str())
-                            && entry.url.starts_with("http")
-                            && entry.suite.starts_with(from_suite)
-                        {
-                            entry.suite = entry.suite.replace(from_suite, to_suite);
+                match list.entries {
+                    SourceListType::SourceLine(ref mut lines) => {
+                        for line in lines {
+                            if let SourceLine::Entry(entry) = line {
+                                if !retain.contains(entry.url.as_str())
+                                    && entry.url.starts_with("http")
+                                    && entry.suite.starts_with(from_suite)
+                                {
+                                    entry.suite = entry.suite.replace(from_suite, to_suite);
+                                }
+                            }
+
+                            writeln!(&mut current_file, "{}", line)?
                         }
                     }
+                    SourceListType::Deb822(ref mut e) => {
+                        for entry in &mut e.entries {
+                            if !retain.contains(entry.url.as_str())
+                                && entry.url.starts_with("http")
+                                && entry.suite.starts_with(from_suite)
+                            {
+                                entry.suite = entry.suite.replace(from_suite, to_suite);
+                            }
 
-                    writeln!(&mut current_file, "{}", line)?
+                            writeln!(&mut current_file, "{}", entry)?
+                        }
+                    }
                 }
 
                 current_file.flush()?;

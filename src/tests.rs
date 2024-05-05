@@ -103,7 +103,8 @@ fn binary() {
                 "restricted".into(),
                 "universe".into(),
                 "multiverse".into(),
-            ]
+            ],
+            is_deb822: true,
         })
     );
 }
@@ -127,7 +128,8 @@ fn source() {
                 "restricted".into(),
                 "universe".into(),
                 "multiverse".into(),
-            ]
+            ],
+            is_deb822: false,
         })
     );
 }
@@ -163,7 +165,8 @@ fn options() {
                 url: "http://apt.pop-os.org/proprietary".into(),
                 suite: "cosmic".into(),
                 options: Some("arch=amd64".into()),
-                components: vec!["main".into()]
+                components: vec!["main".into()],
+                is_deb822: true,
             })
         )
     }

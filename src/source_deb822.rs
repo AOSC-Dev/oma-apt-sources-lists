@@ -1,12 +1,12 @@
-use std::{fmt, fs, path::Path, str::FromStr};
+use std::{fmt, str::FromStr};
 
 use oma_debcontrol::Paragraph;
 
-use crate::{sources_list, SourceEntry, SourceError, SourceResult};
+use crate::{SourceEntry, SourceError};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SourceListDeb822 {
-    entries: Vec<SourceEntry>,
+    pub entries: Vec<SourceEntry>,
 }
 
 impl fmt::Display for SourceListDeb822 {
@@ -60,6 +60,7 @@ impl FromStr for SourceListDeb822 {
                         .split_ascii_whitespace()
                         .map(|x| x.to_string())
                         .collect::<Vec<_>>(),
+                    is_deb822: true,
                 };
 
                 entries.push(entry);
@@ -84,53 +85,6 @@ fn deb822_options(i: &Paragraph) -> Option<String> {
     } else {
         Some(s)
     }
-}
-
-impl SourceListDeb822 {
-    pub fn new<P: AsRef<Path>>(path: P) -> SourceResult<Self> {
-        let path = path.as_ref();
-        let data = fs::read_to_string(path).map_err(|why| SourceError::SourcesListOpen {
-            path: path.to_path_buf(),
-            why,
-        })?;
-
-        let sources_file = data.parse::<SourceListDeb822>()?;
-
-        Ok(sources_file)
-    }
-    /// Scans every file in **/etc/apt/sources.list.d**, including **/etc/apt/sources.list**.
-    ///
-    /// Note that this will parse every source list into memory before returning.
-    pub fn scan() -> SourceResult<Vec<Self>> {
-        scan_inner("/")
-    }
-
-    /// Scans every file in **/etc/apt/sources.list.d**, including **/etc/apt/sources.list**. (from root argument)
-    ///
-    /// Note that this will parse every source list into memory before returning.
-    pub fn scan_from_root<P: AsRef<Path>>(root: P) -> SourceResult<Vec<Self>> {
-        scan_inner(root)
-    }
-
-    pub fn new_from_paths<P: AsRef<Path>, I: Iterator<Item = P>>(
-        paths: I,
-    ) -> SourceResult<Vec<Self>> {
-        let files = paths
-            .map(SourceListDeb822::new)
-            .collect::<SourceResult<Vec<SourceListDeb822>>>()?;
-
-        Ok(files)
-    }
-
-    pub fn entries(&self) -> impl Iterator<Item = &SourceEntry> {
-        self.entries.iter()
-    }
-}
-
-fn scan_inner<P: AsRef<Path>>(dir: P) -> Result<Vec<SourceListDeb822>, SourceError> {
-    let paths = sources_list(dir)?;
-
-    SourceListDeb822::new_from_paths(paths.iter())
 }
 
 #[test]
@@ -162,6 +116,7 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                         "universe".to_string(),
                         "multiverse".to_string()
                     ],
+                    is_deb822: true,
                 },
                 SourceEntry {
                     enabled: true,
@@ -177,6 +132,7 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                         "universe".to_string(),
                         "multiverse".to_string()
                     ],
+                    is_deb822: true,
                 },
                 SourceEntry {
                     enabled: true,
@@ -192,6 +148,7 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                         "universe".to_string(),
                         "multiverse".to_string(),
                     ],
+                    is_deb822: true,
                 }
             ]
         }
