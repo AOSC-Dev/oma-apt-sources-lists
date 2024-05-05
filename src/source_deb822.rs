@@ -11,7 +11,41 @@ pub struct SourceListDeb822 {
 
 impl fmt::Display for SourceListDeb822 {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}", self)
+        let mut uris = vec![];
+        for i in &self.entries {
+            if uris.contains(&(&i.url, i.source)) {
+                continue;
+            }
+
+            writeln!(fmt, "Types: {}", if i.source { "deb-src" } else { "deb" })?;
+            writeln!(fmt, "URIs: {}", i.url)?;
+
+            uris.push((&i.url, i.source));
+
+            let suites = self
+                .entries
+                .iter()
+                .filter(|x| x.url == i.url)
+                .map(|x| x.suite.clone());
+            write!(fmt, "Suites: ")?;
+            for i in suites {
+                write!(fmt, "{} ", i)?;
+            }
+            writeln!(fmt)?;
+
+            writeln!(fmt, "Components: {}", i.components.join(" "))?;
+
+            if let Some(opts) = &i.options {
+                let opts = opts.split(',');
+
+                for i in opts {
+                    let (k, v) = i.split_once('=').unwrap();
+                    writeln!(fmt, "{}: {}", k, v)?;
+                }
+            }
+        }
+
+        Ok(())
     }
 }
 

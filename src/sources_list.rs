@@ -435,18 +435,7 @@ impl SourcesLists {
                             writeln!(&mut current_file, "{}", line)?
                         }
                     }
-                    SourceListType::Deb822(ref mut e) => {
-                        for entry in &mut e.entries {
-                            if !retain.contains(entry.url.as_str())
-                                && entry.url.starts_with("http")
-                                && entry.suite.starts_with(from_suite)
-                            {
-                                entry.suite = entry.suite.replace(from_suite, to_suite);
-                            }
-
-                            writeln!(&mut current_file, "{}", entry)?
-                        }
-                    }
+                    SourceListType::Deb822(ref mut e) => writeln!(&mut current_file, "{}", e)?,
                 }
 
                 current_file.flush()?;
