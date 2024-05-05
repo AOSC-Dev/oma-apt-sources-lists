@@ -37,6 +37,7 @@ pub enum SourcesListError {
     BadLine { line: usize, why: SourceError },
 }
 
+
 impl From<io::Error> for SourceError {
     fn from(why: io::Error) -> Self {
         SourceError::Io(why)

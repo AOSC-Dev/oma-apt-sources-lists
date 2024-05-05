@@ -74,7 +74,7 @@ fn deb822_options(i: &Paragraph) -> Option<String> {
     let s = i
         .fields
         .iter()
-        .filter(|x| !["Types", "URIS", "Suites", "Components"].contains(&x.name))
+        .filter(|x| !["Types", "URIs", "Suites", "Components"].contains(&x.name))
         .map(|x| format!("{}={}", x.name, x.value))
         .collect::<Vec<_>>()
         .join(",");
@@ -131,4 +131,69 @@ fn scan_inner<P: AsRef<Path>>(dir: P) -> Result<Vec<SourceListDeb822>, SourceErr
     let paths = sources_list(dir)?;
 
     SourceListDeb822::new_from_paths(paths.iter())
+}
+
+#[test]
+fn test() {
+    let sources = SourceListDeb822::from_str(
+        r"Types: deb
+URIs: https://mirrors.ustc.edu.cn/ubuntu
+Suites: noble noble-updates noble-backports
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+",
+    );
+
+    assert_eq!(
+        sources.unwrap(),
+        SourceListDeb822 {
+            entries: vec![
+                SourceEntry {
+                    enabled: true,
+                    source: false,
+                    options: Some(
+                        "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
+                    ),
+                    url: "https://mirrors.ustc.edu.cn/ubuntu".to_string(),
+                    suite: "noble".to_string(),
+                    components: vec![
+                        "main".to_string(),
+                        "restricted".to_string(),
+                        "universe".to_string(),
+                        "multiverse".to_string()
+                    ],
+                },
+                SourceEntry {
+                    enabled: true,
+                    source: false,
+                    options: Some(
+                        "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
+                    ),
+                    url: "https://mirrors.ustc.edu.cn/ubuntu".to_string(),
+                    suite: "noble-updates".to_string(),
+                    components: vec![
+                        "main".to_string(),
+                        "restricted".to_string(),
+                        "universe".to_string(),
+                        "multiverse".to_string()
+                    ],
+                },
+                SourceEntry {
+                    enabled: true,
+                    source: false,
+                    options: Some(
+                        "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
+                    ),
+                    url: "https://mirrors.ustc.edu.cn/ubuntu".to_string(),
+                    suite: "noble-backports".to_string(),
+                    components: vec![
+                        "main".to_string(),
+                        "restricted".to_string(),
+                        "universe".to_string(),
+                        "multiverse".to_string(),
+                    ],
+                }
+            ]
+        }
+    );
 }
