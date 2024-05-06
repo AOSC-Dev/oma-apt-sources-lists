@@ -504,11 +504,20 @@ fn scan_inner<P: AsRef<Path>>(dir: P) -> Result<SourcesLists, SourceError> {
 
 pub(crate) fn sources_list<P: AsRef<Path>>(dir: P) -> Result<Vec<PathBuf>, SourceError> {
     let dir = dir.as_ref();
-    let mut paths = vec![dir.join("etc/apt/sources.list")];
+    let mut paths = vec![];
+    let default = dir.join("etc/apt/sources.list");
+
+    if default.exists() {
+        paths.push(default);
+    }
+
     for entry in fs::read_dir(dir.join("etc/apt/sources.list.d/"))? {
         let entry = entry?;
         let path = entry.path();
-        if path.extension().map_or(false, |e| e == "list") {
+        if path
+            .extension()
+            .map_or(false, |e| e == "list" || e == "sources")
+        {
             paths.push(path);
         }
     }
