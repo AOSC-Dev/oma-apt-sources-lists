@@ -97,14 +97,14 @@ fn binary() {
             source: false,
             url: "http://us.archive.ubuntu.com/ubuntu/".into(),
             suite: "cosmic".into(),
-            options: None,
+            options: vec![],
             components: vec![
                 "main".into(),
                 "restricted".into(),
                 "universe".into(),
                 "multiverse".into(),
             ],
-            is_deb822: true,
+            is_deb822: false,
         })
     );
 }
@@ -122,7 +122,7 @@ fn source() {
             source: true,
             url: "http://us.archive.ubuntu.com/ubuntu/".into(),
             suite: "cosmic".into(),
-            options: None,
+            options: vec![],
             components: vec![
                 "main".into(),
                 "restricted".into(),
@@ -164,9 +164,9 @@ fn options() {
                 source: false,
                 url: "http://apt.pop-os.org/proprietary".into(),
                 suite: "cosmic".into(),
-                options: Some("arch=amd64".into()),
+                options: vec!["arch=amd64".into()],
                 components: vec!["main".into()],
-                is_deb822: true,
+                is_deb822: false,
             })
         )
     }
@@ -186,8 +186,9 @@ fn options() {
                 source: false,
                 url: "https://deb.termius.com".into(),
                 suite: "squeeze".into(),
-                options: Some("arch=amd64 signed-by=/usr/share/keyrings/termius-2023.gpg,/usr/share/keyrings/termius-2026.gpg a=b".into()),
-                components: vec!["main".into()]
+                options: vec!["arch=amd64".to_string(), "signed-by=/usr/share/keyrings/termius-2023.gpg,/usr/share/keyrings/termius-2026.gpg".to_string(), "a=b".to_string()],
+                components: vec!["main".into()],
+                is_deb822: false,
             })
         )
     }

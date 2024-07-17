@@ -10,7 +10,7 @@ pub struct SourceEntry {
     /// Whether this is a binary or source repo.
     pub source: bool,
     /// Some repos may have special options defined.
-    pub options: Option<String>,
+    pub options: Vec<String>,
     /// The URL of the repo.
     pub url: String,
     /// The suite of the repo would be as `bionic` or `cosmic`.
@@ -33,8 +33,8 @@ impl fmt::Display for SourceEntry {
             }
 
             fmt.write_str(if self.source { "deb-src " } else { "deb " })?;
-            if let Some(ref options) = self.options.as_ref() {
-                write!(fmt, "[{}] ", options)?;
+            if !self.options.is_empty() {
+                write!(fmt, "[{}] ", self.options.join(" "))?;
             }
 
             write!(
@@ -130,6 +130,14 @@ impl FromStr for SourceEntry {
         for field in fields {
             components.push(field.into());
         }
+
+        let options = options
+            .map(|x| {
+                x.split_ascii_whitespace()
+                    .map(|x| x.to_string())
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
 
         Ok(SourceEntry {
             enabled: true,

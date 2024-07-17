@@ -35,13 +35,9 @@ impl fmt::Display for SourceListDeb822 {
 
             writeln!(fmt, "Components: {}", i.components.join(" "))?;
 
-            if let Some(opts) = &i.options {
-                let opts = opts.split(',');
-
-                for i in opts {
-                    let (k, v) = i.split_once('=').unwrap();
-                    writeln!(fmt, "{}: {}", k, v)?;
-                }
+            for j in &i.options {
+                let (k, v) = j.split_once('=').unwrap();
+                writeln!(fmt, "{}: {}", k, v)?;
             }
         }
 
@@ -105,20 +101,13 @@ impl FromStr for SourceListDeb822 {
     }
 }
 
-fn deb822_options(i: &Paragraph) -> Option<String> {
-    let s = i
+fn deb822_options(i: &Paragraph) -> Vec<String> {
+    i
         .fields
         .iter()
         .filter(|x| !["Types", "URIs", "Suites", "Components"].contains(&x.name))
         .map(|x| format!("{}={}", x.name, x.value))
         .collect::<Vec<_>>()
-        .join(",");
-
-    if s.is_empty() {
-        None
-    } else {
-        Some(s)
-    }
 }
 
 #[test]
@@ -139,9 +128,9 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                 SourceEntry {
                     enabled: true,
                     source: false,
-                    options: Some(
+                    options: vec![
                         "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
-                    ),
+                    ],
                     url: "https://mirrors.ustc.edu.cn/ubuntu".to_string(),
                     suite: "noble".to_string(),
                     components: vec![
@@ -155,9 +144,9 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                 SourceEntry {
                     enabled: true,
                     source: false,
-                    options: Some(
+                    options: vec![
                         "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
-                    ),
+                    ],
                     url: "https://mirrors.ustc.edu.cn/ubuntu".to_string(),
                     suite: "noble-updates".to_string(),
                     components: vec![
@@ -171,9 +160,9 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                 SourceEntry {
                     enabled: true,
                     source: false,
-                    options: Some(
+                    options: vec![
                         "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
-                    ),
+                    ],
                     url: "https://mirrors.ustc.edu.cn/ubuntu".to_string(),
                     suite: "noble-backports".to_string(),
                     components: vec![
@@ -196,9 +185,9 @@ fn test_serialize_deb822() {
             SourceEntry {
                 enabled: true,
                 source: false,
-                options: Some(
-                    "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string(),
-                ),
+                options: vec![
+                    "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
+                ],
                 url: "https://mirrors.ustc.edu.cn/ubuntu".to_string(),
                 suite: "noble".to_string(),
                 components: vec![
@@ -212,9 +201,9 @@ fn test_serialize_deb822() {
             SourceEntry {
                 enabled: true,
                 source: false,
-                options: Some(
-                    "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string(),
-                ),
+                options: vec![
+                    "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
+                ],
                 url: "https://mirrors.ustc.edu.cn/ubuntu".to_string(),
                 suite: "noble-updates".to_string(),
                 components: vec![
@@ -228,9 +217,9 @@ fn test_serialize_deb822() {
             SourceEntry {
                 enabled: true,
                 source: false,
-                options: Some(
-                    "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string(),
-                ),
+                options: vec![
+                    "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
+                ],
                 url: "https://mirrors.ustc.edu.cn/ubuntu".to_string(),
                 suite: "noble-backports".to_string(),
                 components: vec![
