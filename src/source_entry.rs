@@ -91,14 +91,14 @@ impl FromStr for SourceEntry {
                         .next()
                         .ok_or(SourceError::MissingField { field: "option" })?;
                     if let Some(pos) = next.find(']') {
-                        field.push_str(" ");
+                        field.push(' ');
                         field.push_str(&next[..pos]);
                         if pos != next.len() - 1 {
                             leftover = Some(next[pos + 1..].into());
                         }
                         break;
                     } else {
-                        field.push_str(" ");
+                        field.push(' ');
                         field.push_str(next);
                     }
                 }

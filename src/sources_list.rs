@@ -227,7 +227,7 @@ impl SourcesLists {
                 match &list.entries {
                     SourceListType::SourceLine(lines) => Box::new(lines.iter().filter_map(|x| {
                         if let SourceLine::Entry(entry) = x {
-                            return Some(entry);
+                            Some(entry)
                         } else {
                             None
                         }
@@ -442,7 +442,7 @@ impl SourcesLists {
         }
 
         let mut modified = Vec::new();
-        apply(self, &mut modified, retain, from_suite, to_suite).map_err(|why| {
+        apply(self, &mut modified, retain, from_suite, to_suite).inspect_err(|_| {
             // TODO: Revert the ipathsn-memory changes that were made when being applied.
             // revert(self, &modified);
 
@@ -451,8 +451,6 @@ impl SourcesLists {
                     eprintln!("failed to restore backup of {:?}: {}", backup, why);
                 }
             }
-
-            why
         })
     }
 

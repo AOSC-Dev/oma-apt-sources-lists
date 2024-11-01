@@ -7,10 +7,10 @@
 //! back into text. Formatting of these lines are not preserved.
 
 mod errors;
+pub mod source_deb822;
 mod source_entry;
 mod source_line;
 mod sources_list;
-pub mod source_deb822;
 
 #[cfg(test)]
 mod tests;
