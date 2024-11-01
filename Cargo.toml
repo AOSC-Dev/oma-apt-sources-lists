@@ -10,5 +10,5 @@ categories = ["os::unix-apis"]
 edition = "2021"
 
 [dependencies]
-err-derive = "0.3"
+thiserror = "1"
 oma-debcontrol = "0.3"

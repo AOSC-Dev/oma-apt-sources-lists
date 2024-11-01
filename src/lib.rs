@@ -6,9 +6,6 @@
 //! Active source entries will be parsed into `SourceEntry`'s, which can be handled or serialized
 //! back into text. Formatting of these lines are not preserved.
 
-#[macro_use]
-extern crate err_derive;
-
 mod errors;
 mod source_entry;
 mod source_line;
