@@ -102,8 +102,7 @@ impl FromStr for SourceListDeb822 {
 }
 
 fn deb822_options(i: &Paragraph) -> Vec<String> {
-    i
-        .fields
+    i.fields
         .iter()
         .filter(|x| !["Types", "URIs", "Suites", "Components"].contains(&x.name))
         .map(|x| format!("{}={}", x.name, x.value))
