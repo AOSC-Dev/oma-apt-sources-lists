@@ -36,10 +36,7 @@ impl FromStr for SourcesList {
                         .parse::<SourceLine>()
                         .map_err(|why| SourcesListError::BadLine { line: no, why })?;
 
-                    // Prevent duplicate entries.
-                    if !entries.contains(&entry) {
-                        entries.push(entry);
-                    }
+                    entries.push(entry);
                 }
 
                 Ok(SourcesList {
