@@ -83,7 +83,7 @@ impl SourcesList {
     pub fn get_entries_mut<'a>(
         &'a mut self,
         entry: &'a str,
-    ) -> Box<dyn Iterator<Item = &mut SourceEntry> + 'a> {
+    ) -> Box<dyn Iterator<Item = &'a mut SourceEntry> + 'a> {
         match self.entries {
             SourceListType::SourceLine(ref mut line) => {
                 Box::new(line.iter_mut().filter_map(move |line| {

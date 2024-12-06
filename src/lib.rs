@@ -11,6 +11,7 @@ pub mod source_deb822;
 mod source_entry;
 mod source_line;
 mod sources_list;
+mod deb822;
 
 #[cfg(test)]
 mod tests;

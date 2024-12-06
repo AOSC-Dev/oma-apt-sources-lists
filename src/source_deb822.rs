@@ -1,8 +1,11 @@
-use std::{fmt, str::FromStr};
+use std::{fmt, ops::Deref, str::FromStr};
 
-use oma_debcontrol::Paragraph;
+use deb822_lossless::{Paragraph, ToDeb822Paragraph};
 
-use crate::{SourceEntry, SourceError};
+use crate::{
+    deb822::{Repositories, RepositoryType},
+    SourceEntry, SourceError,
+};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SourceListDeb822 {
@@ -49,64 +52,42 @@ impl FromStr for SourceListDeb822 {
     type Err = SourceError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let p = oma_debcontrol::parse_str(s)
-            .map_err(|e| SourceError::SyntaxError { why: e.to_string() })?;
+        let sources_list: Repositories = s.parse().map_err(|_| SourceError::SyntaxError {
+            why: "".to_string(),
+        })?;
 
         let mut entries = vec![];
 
-        for i in p {
-            for j in i
-                .fields
-                .iter()
-                .find(|x| x.name == "Suites")
-                .map(|x| x.value.to_string())
-                .ok_or(SourceError::MissingField { field: "Suites" })?
-                .split_ascii_whitespace()
-            {
-                let entry = SourceEntry {
-                    enabled: true,
-                    source: i
-                        .fields
-                        .iter()
-                        .find(|x| x.name == "Types")
-                        .map(|x| x.value != "deb")
-                        .unwrap_or(false),
-                    options: deb822_options(&i),
-                    url: i
-                        .fields
-                        .iter()
-                        .find(|x| x.name == "URIs")
-                        .map(|x| x.value.to_string())
-                        .ok_or(SourceError::MissingField { field: "URIs" })?,
-                    suite: j.to_string(),
-                    components: i
-                        .fields
-                        .iter()
-                        .find(|x| x.name == "Components")
-                        .map(|x| x.value.to_string())
-                        .ok_or(SourceError::MissingField {
-                            field: "Components",
-                        })?
-                        .split_ascii_whitespace()
-                        .map(|x| x.to_string())
-                        .collect::<Vec<_>>(),
-                    is_deb822: true,
-                };
+        for source in sources_list.deref() {
+            let p: Paragraph = source.to_paragraph();
+            for suite in &source.suites {
+                for url in &source.uris {
+                    for source_type in &source.types {
+                        let entry = SourceEntry {
+                            enabled: source.enabled.unwrap_or(true),
+                            source: *source_type == RepositoryType::Source,
+                            url: url.to_string(),
+                            suite: suite.to_string(),
+                            components: source.components.clone(),
+                            is_deb822: true,
+                            options: p
+                                .items()
+                                .filter(|x| {
+                                    !["Enabled", "Types", "URIs", "Suites", "Components"]
+                                        .contains(&x.0.as_str())
+                                })
+                                .map(|x| format!("{}={}", x.0, x.1))
+                                .collect::<Vec<_>>(),
+                        };
 
-                entries.push(entry);
+                        entries.push(entry);
+                    }
+                }
             }
         }
 
         Ok(Self { entries })
     }
-}
-
-fn deb822_options(i: &Paragraph) -> Vec<String> {
-    i.fields
-        .iter()
-        .filter(|x| !["Types", "URIs", "Suites", "Components"].contains(&x.name))
-        .map(|x| format!("{}={}", x.name, x.value))
-        .collect::<Vec<_>>()
 }
 
 #[test]

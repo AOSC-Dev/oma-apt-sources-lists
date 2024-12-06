@@ -10,5 +10,10 @@ categories = ["os::unix-apis"]
 edition = "2021"
 
 [dependencies]
-thiserror = "1"
+thiserror = "2"
 oma-debcontrol = "0.3"
+deb822-lossless = { version = "0.2", features = ["derive"] }
+url = "2.5"
+
+[dev-dependencies]
+indoc = { version = "2.0.5" }
