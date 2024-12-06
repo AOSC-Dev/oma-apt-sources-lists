@@ -52,9 +52,8 @@ impl FromStr for SourceListDeb822 {
     type Err = SourceError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let sources_list: Repositories = s.parse().map_err(|_| SourceError::SyntaxError {
-            why: "".to_string(),
-        })?;
+        let sources_list: Repositories =
+            s.parse().map_err(|e| SourceError::SyntaxError { why: e })?;
 
         let mut entries = vec![];
 
