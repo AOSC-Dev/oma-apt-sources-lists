@@ -22,7 +22,7 @@ pub struct SourceEntry {
     /// Architectures binaries from this repository run on
     pub archs: Option<Vec<String>>,
     /// signed-by
-    pub signed_by: Option<Vec<Signature>>,
+    pub signed_by: Option<Signature>,
     /// Trusted
     pub trusted: bool,
     pub is_deb822: bool,
@@ -169,14 +169,14 @@ impl FromStr for SourceEntry {
         let mut signed_by = None;
 
         if let Some(pos) = options.iter().position(|x| x.0 == "signed-by") {
-            signed_by = Some(
+            signed_by = Some(Signature::KeyPath(
                 options
                     .remove(pos)
                     .1
                     .iter()
-                    .map(|x| Signature::KeyPath(x.into()))
+                    .map(|x| x.into())
                     .collect::<Vec<_>>(),
-            )
+            ))
         }
 
         let mut trusted = false;

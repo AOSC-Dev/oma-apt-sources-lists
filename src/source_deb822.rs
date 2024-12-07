@@ -43,10 +43,7 @@ impl fmt::Display for SourceListDeb822 {
             }
 
             if let Some(signed_by) = &i.signed_by {
-                // FIXME: deb822 support multi keypath?
-                if let Some(first) = signed_by.first() {
-                    writeln!(fmt, "Signed-By: {}", first)?;
-                }
+                writeln!(fmt, "Signed-By:{}", signed_by)?;
             }
 
             for j in &i.options {
@@ -105,7 +102,7 @@ impl FromStr for SourceListDeb822 {
                                 .collect::<Vec<_>>(),
                             archs: source.architectures.clone(),
                             trusted: source.trusted.unwrap_or(false),
-                            signed_by: source.signature.clone().map(|x| vec![x]),
+                            signed_by: source.signature.clone(),
                         };
 
                         entries.push(entry);
@@ -158,9 +155,9 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                         "multiverse".to_string(),
                         "main".to_string(),
                     ],
-                    signed_by: Some(vec![Signature::KeyPath(
+                    signed_by: Some(Signature::KeyPath(vec![
                         "/usr/share/keyrings/ubuntu-archive-keyring.gpg".into()
-                    )]),
+                    ])),
                     is_deb822: true,
                     archs: None,
                     trusted: false,
@@ -178,9 +175,9 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                         "main".to_string(),
                     ],
                     is_deb822: true,
-                    signed_by: Some(vec![Signature::KeyPath(
+                    signed_by: Some(Signature::KeyPath(vec![
                         "/usr/share/keyrings/ubuntu-archive-keyring.gpg".into()
-                    )]),
+                    ])),
                     archs: None,
                     trusted: false,
                 },
@@ -198,9 +195,9 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                     ],
                     is_deb822: true,
                     archs: None,
-                    signed_by: Some(vec![Signature::KeyPath(
+                    signed_by: Some(Signature::KeyPath(vec![
                         "/usr/share/keyrings/ubuntu-archive-keyring.gpg".into()
-                    )]),
+                    ])),
                     trusted: false,
                 },
                 SourceEntry {
@@ -217,9 +214,9 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                     ],
                     is_deb822: true,
                     archs: None,
-                    signed_by: Some(vec![Signature::KeyPath(
+                    signed_by: Some(Signature::KeyPath(vec![
                         "/usr/share/keyrings/ubuntu-archive-keyring.gpg".into()
-                    )]),
+                    ])),
                     trusted: false,
                 },
             ]
@@ -246,9 +243,9 @@ fn test_serialize_deb822() {
                 ],
                 is_deb822: true,
                 archs: None,
-                signed_by: Some(vec![Signature::KeyPath(
+                signed_by: Some(Signature::KeyPath(vec![
                     "/usr/share/keyrings/ubuntu-archive-keyring.gpg".into(),
-                )]),
+                ])),
                 trusted: false,
             },
             SourceEntry {
@@ -265,9 +262,9 @@ fn test_serialize_deb822() {
                 ],
                 is_deb822: true,
                 archs: None,
-                signed_by: Some(vec![Signature::KeyPath(
+                signed_by: Some(Signature::KeyPath(vec![
                     "/usr/share/keyrings/ubuntu-archive-keyring.gpg".into(),
-                )]),
+                ])),
                 trusted: false,
             },
             SourceEntry {
@@ -284,9 +281,9 @@ fn test_serialize_deb822() {
                 ],
                 is_deb822: true,
                 archs: None,
-                signed_by: Some(vec![Signature::KeyPath(
+                signed_by: Some(Signature::KeyPath(vec![
                     "/usr/share/keyrings/ubuntu-archive-keyring.gpg".into(),
-                )]),
+                ])),
                 trusted: false,
             },
         ],

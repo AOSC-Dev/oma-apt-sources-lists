@@ -201,10 +201,10 @@ fn options() {
                 components: vec!["main".into()],
                 is_deb822: false,
                 archs: Some(vec!["amd64".to_string()]),
-                signed_by: Some(vec![
-                    Signature::KeyPath("/usr/share/keyrings/termius-2023.gpg".into()),
-                    Signature::KeyPath("/usr/share/keyrings/termius-2026.gpg".into())
-                ]),
+                signed_by: Some(Signature::KeyPath(vec![
+                    "/usr/share/keyrings/termius-2023.gpg".into(),
+                    "/usr/share/keyrings/termius-2026.gpg".into()
+                ]),),
                 trusted: false,
             })
         )
