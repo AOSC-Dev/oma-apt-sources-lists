@@ -1,6 +1,6 @@
 [package]
 name = "oma-apt-sources-lists"
-version = "0.8.0"
+version = "0.8.1"
 authors = ["Michael Aaron Murphy <mmstickman@gmail.com>"]
 description = "Library for fetching information from apt sources lists on the system"
 license = "MIT"
