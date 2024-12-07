@@ -1,3 +1,5 @@
+use deb822::signature::Signature;
+
 use super::*;
 use std::fmt;
 use std::str::FromStr;
@@ -19,6 +21,10 @@ pub struct SourceEntry {
     pub components: Vec<String>,
     /// Architectures binaries from this repository run on
     pub archs: Option<Vec<String>>,
+    /// signed-by
+    pub signed_by: Option<Vec<Signature>>,
+    /// Trusted
+    pub trusted: bool,
     pub is_deb822: bool,
 }
 
@@ -160,6 +166,25 @@ impl FromStr for SourceEntry {
             archs = Some(options.remove(pos).1);
         }
 
+        let mut signed_by = None;
+
+        if let Some(pos) = options.iter().position(|x| x.0 == "signed-by") {
+            signed_by = Some(
+                options
+                    .remove(pos)
+                    .1
+                    .iter()
+                    .map(|x| Signature::KeyPath(x.into()))
+                    .collect::<Vec<_>>(),
+            )
+        }
+
+        let mut trusted = false;
+
+        if let Some(pos) = options.iter().position(|x| x.0 == "trusted") {
+            trusted = options.remove(pos).1.first().is_some_and(|x| x == "yes")
+        }
+
         Ok(SourceEntry {
             enabled: true,
             source,
@@ -169,6 +194,8 @@ impl FromStr for SourceEntry {
             options,
             is_deb822: false,
             archs,
+            signed_by,
+            trusted,
         })
     }
 }

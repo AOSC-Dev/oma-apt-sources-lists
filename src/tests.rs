@@ -1,3 +1,5 @@
+use deb822::signature::Signature;
+
 pub use super::*;
 use std::str::FromStr;
 
@@ -106,6 +108,8 @@ fn binary() {
             ],
             is_deb822: false,
             archs: None,
+            signed_by: None,
+            trusted: false,
         })
     );
 }
@@ -132,6 +136,8 @@ fn source() {
             ],
             is_deb822: false,
             archs: None,
+            signed_by: None,
+            trusted: false,
         })
     );
 }
@@ -169,7 +175,9 @@ fn options() {
                 options: vec![],
                 components: vec!["main".into()],
                 is_deb822: false,
-                archs: Some(vec!["amd64".to_string()])
+                archs: Some(vec!["amd64".to_string()]),
+                signed_by: None,
+                trusted: false,
             })
         )
     }
@@ -190,18 +198,13 @@ fn options() {
                 url: "https://deb.termius.com".into(),
                 suite: "squeeze".into(),
                 options: vec![
-                    (
-                        "signed-by".to_string(),
-                        vec![
-                            "/usr/share/keyrings/termius-2023.gpg".to_string(),
-                            "/usr/share/keyrings/termius-2026.gpg".to_string()
-                        ]
-                    ),
                     ("a".to_string(), vec!["b".to_string()])
                 ],
                 components: vec!["main".into()],
                 is_deb822: false,
-                archs: Some(vec!["amd64".to_string()])
+                archs: Some(vec!["amd64".to_string()]),
+                signed_by: Some(vec![Signature::KeyPath("/usr/share/keyrings/termius-2023.gpg".into()), Signature::KeyPath("/usr/share/keyrings/termius-2026.gpg".into())]),
+                trusted: false,
             })
         )
     }
