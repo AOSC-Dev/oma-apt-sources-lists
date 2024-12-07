@@ -20,7 +20,7 @@ pub enum RepositoryError {
     /// Errors in lossless parser
     Lossless(deb822_lossless::lossless::Error),
     /// I/O Error
-    Io(std::io::Error)
+    Io(std::io::Error),
 }
 
 impl From<std::io::Error> for RepositoryError {

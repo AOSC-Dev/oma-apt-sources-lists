@@ -10,13 +10,15 @@ pub struct SourceEntry {
     /// Whether this is a binary or source repo.
     pub source: bool,
     /// Some repos may have special options defined.
-    pub options: Vec<String>,
+    pub options: Vec<(String, Vec<String>)>,
     /// The URL of the repo.
     pub url: String,
     /// The suite of the repo would be as `bionic` or `cosmic`.
     pub suite: String,
     /// Components that have been enabled for this repo.
     pub components: Vec<String>,
+    /// Architectures binaries from this repository run on
+    pub archs: Option<Vec<String>>,
     pub is_deb822: bool,
 }
 
@@ -33,8 +35,15 @@ impl fmt::Display for SourceEntry {
             }
 
             fmt.write_str(if self.source { "deb-src " } else { "deb " })?;
+            let mut options_string = vec![];
             if !self.options.is_empty() {
-                write!(fmt, "[{}] ", self.options.join(" "))?;
+                for (k, v) in &self.options {
+                    options_string.push(format!("{k}={}", v.join(",")));
+                }
+            }
+
+            if !options_string.is_empty() {
+                write!(fmt, "[{}] ", options_string.join(" "))?;
             }
 
             write!(
@@ -131,13 +140,25 @@ impl FromStr for SourceEntry {
             components.push(field.into());
         }
 
-        let options = options
+        let mut options = options
             .map(|x| {
                 x.split_ascii_whitespace()
-                    .map(|x| x.to_string())
+                    .map(|x| x.split_once('=').unwrap_or((x, "")))
+                    .map(|x| {
+                        (
+                            x.0.to_string(),
+                            x.1.split(',').map(|x| x.to_string()).collect::<Vec<_>>(),
+                        )
+                    })
                     .collect::<Vec<_>>()
             })
             .unwrap_or_default();
+
+        let mut archs = None;
+
+        if let Some(pos) = options.iter().position(|x| x.0 == "arch") {
+            archs = Some(options.remove(pos).1);
+        }
 
         Ok(SourceEntry {
             enabled: true,
@@ -147,6 +168,7 @@ impl FromStr for SourceEntry {
             components,
             options,
             is_deb822: false,
+            archs,
         })
     }
 }

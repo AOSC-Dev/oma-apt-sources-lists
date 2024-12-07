@@ -6,12 +6,12 @@
 //! Active source entries will be parsed into `SourceEntry`'s, which can be handled or serialized
 //! back into text. Formatting of these lines are not preserved.
 
+mod deb822;
 mod errors;
 pub mod source_deb822;
 mod source_entry;
 mod source_line;
 mod sources_list;
-mod deb822;
 
 #[cfg(test)]
 mod tests;

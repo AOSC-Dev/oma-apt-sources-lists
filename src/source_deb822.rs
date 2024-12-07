@@ -39,8 +39,7 @@ impl fmt::Display for SourceListDeb822 {
             writeln!(fmt, "Components: {}", i.components.join(" "))?;
 
             for j in &i.options {
-                let (k, v) = j.split_once('=').unwrap();
-                writeln!(fmt, "{}: {}", k, v)?;
+                writeln!(fmt, "{}: {}", j.0, j.1.join(" "))?;
             }
         }
 
@@ -72,11 +71,26 @@ impl FromStr for SourceListDeb822 {
                             options: p
                                 .items()
                                 .filter(|x| {
-                                    !["Enabled", "Types", "URIs", "Suites", "Components"]
-                                        .contains(&x.0.as_str())
+                                    ![
+                                        "Enabled",
+                                        "Types",
+                                        "URIs",
+                                        "Suites",
+                                        "Components",
+                                        "Architectures",
+                                    ]
+                                    .contains(&x.0.as_str())
                                 })
-                                .map(|x| format!("{}={}", x.0, x.1))
+                                .map(|x| {
+                                    (
+                                        x.0,
+                                        x.1.split_ascii_whitespace()
+                                            .map(|x| x.to_string())
+                                            .collect::<Vec<_>>(),
+                                    )
+                                })
                                 .collect::<Vec<_>>(),
+                            archs: source.architectures.clone(),
                         };
 
                         entries.push(entry);
@@ -119,9 +133,10 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                 SourceEntry {
                     enabled: true,
                     source: false,
-                    options: vec![
-                        "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
-                    ],
+                    options: vec![(
+                        "Signed-By".to_string(),
+                        vec!["/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()],
+                    )],
                     url: "http://security.ubuntu.com/ubuntu/".to_string(),
                     suite: "noble-security".to_string(),
                     components: vec![
@@ -131,13 +146,15 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                         "main".to_string(),
                     ],
                     is_deb822: true,
+                    archs: None,
                 },
                 SourceEntry {
                     enabled: true,
                     source: true,
-                    options: vec![
-                        "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
-                    ],
+                    options: vec![(
+                        "Signed-By".to_string(),
+                        vec!["/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()],
+                    )],
                     url: "http://cn.archive.ubuntu.com/ubuntu/".to_string(),
                     suite: "noble".to_string(),
                     components: vec![
@@ -147,13 +164,15 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                         "main".to_string(),
                     ],
                     is_deb822: true,
+                    archs: None,
                 },
                 SourceEntry {
                     enabled: true,
                     source: true,
-                    options: vec![
-                        "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
-                    ],
+                    options: vec![(
+                        "Signed-By".to_string(),
+                        vec!["/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()],
+                    )],
                     url: "http://cn.archive.ubuntu.com/ubuntu/".to_string(),
                     suite: "noble-security".to_string(),
                     components: vec![
@@ -163,13 +182,15 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                         "main".to_string(),
                     ],
                     is_deb822: true,
+                    archs: None,
                 },
                 SourceEntry {
                     enabled: true,
                     source: false,
-                    options: vec![
-                        "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
-                    ],
+                    options: vec![(
+                        "Signed-By".to_string(),
+                        vec!["/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()],
+                    )],
                     url: "http://cn.archive.ubuntu.com/ubuntu/".to_string(),
                     suite: "noble".to_string(),
                     components: vec![
@@ -179,6 +200,7 @@ Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
                         "main".to_string(),
                     ],
                     is_deb822: true,
+                    archs: None,
                 },
             ]
         }
@@ -192,9 +214,10 @@ fn test_serialize_deb822() {
             SourceEntry {
                 enabled: true,
                 source: false,
-                options: vec![
-                    "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
-                ],
+                options: vec![(
+                    "Signed-By".to_string(),
+                    vec!["/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()],
+                )],
                 url: "https://mirrors.ustc.edu.cn/ubuntu".to_string(),
                 suite: "noble".to_string(),
                 components: vec![
@@ -204,13 +227,15 @@ fn test_serialize_deb822() {
                     "multiverse".to_string(),
                 ],
                 is_deb822: true,
+                archs: None,
             },
             SourceEntry {
                 enabled: true,
                 source: false,
-                options: vec![
-                    "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
-                ],
+                options: vec![(
+                    "Signed-By".to_string(),
+                    vec!["/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()],
+                )],
                 url: "https://mirrors.ustc.edu.cn/ubuntu".to_string(),
                 suite: "noble-updates".to_string(),
                 components: vec![
@@ -220,13 +245,15 @@ fn test_serialize_deb822() {
                     "multiverse".to_string(),
                 ],
                 is_deb822: true,
+                archs: None,
             },
             SourceEntry {
                 enabled: true,
                 source: false,
-                options: vec![
-                    "Signed-By=/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()
-                ],
+                options: vec![(
+                    "Signed-By".to_string(),
+                    vec!["/usr/share/keyrings/ubuntu-archive-keyring.gpg".to_string()],
+                )],
                 url: "https://mirrors.ustc.edu.cn/ubuntu".to_string(),
                 suite: "noble-backports".to_string(),
                 components: vec![
@@ -236,6 +263,7 @@ fn test_serialize_deb822() {
                     "multiverse".to_string(),
                 ],
                 is_deb822: true,
+                archs: None,
             },
         ],
     };
