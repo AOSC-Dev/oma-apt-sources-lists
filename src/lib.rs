@@ -20,3 +20,4 @@ pub use self::errors::*;
 pub use self::source_entry::*;
 pub use self::source_line::*;
 pub use self::sources_list::*;
+pub use deb822::signature::Signature;
