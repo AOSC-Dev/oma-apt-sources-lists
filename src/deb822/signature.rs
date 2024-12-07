@@ -25,7 +25,7 @@ impl std::str::FromStr for Signature {
             Ok(Signature::KeyBlock(text.to_string()))
         } else {
             let mut paths = vec![];
-            for i in text.trim().lines() {
+            for i in text.trim().split_ascii_whitespace() {
                 paths.push(PathBuf::from(i));
             }
             Ok(Signature::KeyPath(paths))
