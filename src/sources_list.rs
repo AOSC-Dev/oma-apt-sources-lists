@@ -506,14 +506,16 @@ pub(crate) fn sources_list<P: AsRef<Path>>(dir: P) -> Result<Vec<PathBuf>, Sourc
         paths.push(default);
     }
 
-    for entry in fs::read_dir(dir.join("etc/apt/sources.list.d/"))? {
-        let entry = entry?;
-        let path = entry.path();
-        if path
-            .extension()
-            .map_or(false, |e| e == "list" || e == "sources")
-        {
-            paths.push(path);
+    if dir.join("etc/apt/sources.list.d/").exists() {
+        for entry in fs::read_dir(dir.join("etc/apt/sources.list.d/"))? {
+            let entry = entry?;
+            let path = entry.path();
+            if path
+                .extension()
+                .map_or(false, |e| e == "list" || e == "sources")
+            {
+                paths.push(path);
+            }
         }
     }
 
