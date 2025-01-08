@@ -67,7 +67,9 @@ fn sources_lists_pop_disabled() -> SourcesLists {
             SourcesList {
                 path: PathBuf::new(),
                 entries: sources_list::SourceListType::SourceLine(
-                    POP_PPA_DISABLED.parse::<SourceListLineStyle>().expect("pop ppa gen"),
+                    POP_PPA_DISABLED
+                        .parse::<SourceListLineStyle>()
+                        .expect("pop ppa gen"),
                 ),
             },
         ],

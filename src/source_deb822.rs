@@ -134,7 +134,8 @@ Signed-By: /etc/apt/trusted.gpg.d/crosspaste.asc
                 enabled: true,
                 source: false,
                 options: vec![],
-                url: "https://github.com/CrossPaste/crosspaste-desktop/releases/latest/download/".to_string(),
+                url: "https://github.com/CrossPaste/crosspaste-desktop/releases/latest/download/"
+                    .to_string(),
                 suite: "./".to_string(),
                 components: vec![],
                 signed_by: Some(Signature::KeyPath(vec![

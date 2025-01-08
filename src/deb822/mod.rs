@@ -94,13 +94,13 @@ impl ToString for &YesNoForce {
 
 fn deserialize_types(text: &str) -> Result<HashSet<RepositoryType>, RepositoryError> {
     text.split_whitespace()
-        .map(|t| RepositoryType::from_str(t))
+        .map(RepositoryType::from_str)
         .collect::<Result<HashSet<RepositoryType>, RepositoryError>>()
 }
 
 fn serialize_types(files: &HashSet<RepositoryType>) -> String {
     files
-        .into_iter()
+        .iter()
         .map(|rt| rt.to_string())
         .collect::<Vec<String>>()
         .join("\n")
@@ -109,13 +109,13 @@ fn serialize_types(files: &HashSet<RepositoryType>) -> String {
 fn deserialize_uris(text: &str) -> Result<Vec<Url>, String> {
     // TODO: bad error type
     text.split_whitespace()
-        .map(|u| Url::from_str(u))
+        .map(Url::from_str)
         .collect::<Result<Vec<Url>, _>>()
         .map_err(|e| e.to_string()) // TODO: bad error type
 }
 
 fn serialize_uris(uris: &[Url]) -> String {
-    uris.into_iter()
+    uris.iter()
         .map(|u| u.as_str())
         .collect::<Vec<&str>>()
         .join(" ")
