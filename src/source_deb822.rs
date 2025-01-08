@@ -74,7 +74,7 @@ impl FromStr for SourceListDeb822 {
                             source: *source_type == RepositoryType::Source,
                             url: url.to_string(),
                             suite: suite.to_string(),
-                            components: source.components.clone(),
+                            components: source.components.clone().unwrap_or(vec![]),
                             is_deb822: true,
                             options: p
                                 .items()
@@ -113,6 +113,40 @@ impl FromStr for SourceListDeb822 {
 
         Ok(Self { entries })
     }
+}
+
+#[test]
+fn test_deb822_flat_repo() {
+    use crate::deb822::signature::Signature;
+
+    let s = r#"Types: deb
+URIs: https://github.com/CrossPaste/crosspaste-desktop/releases/latest/download/
+Suites: ./
+Signed-By: /etc/apt/trusted.gpg.d/crosspaste.asc
+"#;
+
+    let sources = SourceListDeb822::from_str(s);
+
+    assert_eq!(
+        sources.unwrap(),
+        SourceListDeb822 {
+            entries: vec![SourceEntry {
+                enabled: true,
+                source: false,
+                options: vec![],
+                url: "https://github.com/CrossPaste/crosspaste-desktop/releases/latest/download/"
+                    .to_string(),
+                suite: "./".to_string(),
+                components: vec![],
+                signed_by: Some(Signature::KeyPath(vec![
+                    "/etc/apt/trusted.gpg.d/crosspaste.asc".into()
+                ])),
+                is_deb822: true,
+                archs: None,
+                trusted: false,
+            }]
+        }
+    );
 }
 
 #[test]
