@@ -200,7 +200,7 @@ pub struct Repository {
     pub suites: Vec<String>,
     /// Section of the repository, usually `main`, `contrib` or `non-free`
     #[deb822(field = "Components", deserialize_with = deserialize_string_chain, serialize_with = serialize_string_chain)]
-    pub components: Vec<String>,
+    pub components: Option<Vec<String>>,
 
     /// (Optional) Architectures binaries from this repository run on
     #[deb822(field = "Architectures", deserialize_with = deserialize_string_chain, serialize_with = serialize_string_chain)]
@@ -393,7 +393,7 @@ mod tests {
             architectures: vec!["arm64".to_owned()].into(),
             uris: vec![Url::from_str("https://deb.debian.org/debian").unwrap()],
             suites: vec!["jammy".to_owned()],
-            components: vec!["main".to_owned()],
+            components: vec!["main".to_owned()].into(),
             signature: None,
             x_repolib_name: None,
             languages: None,
