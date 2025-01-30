@@ -213,24 +213,29 @@ fn options() {
         "deb [arch=amd64 signed-by=/usr/share/keyrings/termius-2023.gpg,/usr/share/keyrings/termius-2026.gpg a=b ] https://deb.termius.com squeeze main"
     ];
 
+    let expected = SourceLine::Entry(SourceEntry {
+        enabled: true,
+        source: false,
+        url: "https://deb.termius.com".into(),
+        suite: "squeeze".into(),
+        options: vec![("a".to_string(), vec!["b".to_string()])],
+        components: vec!["main".into()],
+        is_deb822: false,
+        archs: Some(vec!["amd64".to_string()]),
+        signed_by: Some(Signature::KeyPath(vec![
+            "/usr/share/keyrings/termius-2023.gpg".into(),
+            "/usr/share/keyrings/termius-2026.gpg".into(),
+        ])),
+        trusted: false,
+    });
+
     for source in &options {
-        assert_eq!(
-            SourceLine::from_str(source).unwrap(),
-            SourceLine::Entry(SourceEntry {
-                enabled: true,
-                source: false,
-                url: "https://deb.termius.com".into(),
-                suite: "squeeze".into(),
-                options: vec![("a".to_string(), vec!["b".to_string()])],
-                components: vec!["main".into()],
-                is_deb822: false,
-                archs: Some(vec!["amd64".to_string()]),
-                signed_by: Some(Signature::KeyPath(vec![
-                    "/usr/share/keyrings/termius-2023.gpg".into(),
-                    "/usr/share/keyrings/termius-2026.gpg".into()
-                ]),),
-                trusted: false,
-            })
-        )
+        // Check parsing
+        assert_eq!(SourceLine::from_str(source).unwrap(), expected);
+
+        // Check that serializing the line and parsing it again, gives the same result
+        // (i.e. no options were lost)
+        let re_serialized = format!("{}", SourceLine::from_str(source).unwrap());
+        assert_eq!(SourceLine::from_str(&re_serialized).unwrap(), expected);
     }
 }
