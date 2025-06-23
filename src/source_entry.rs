@@ -1,6 +1,7 @@
 use deb822::signature::Signature;
 
 use super::*;
+use std::borrow::Cow;
 use std::fmt;
 use std::str::FromStr;
 
@@ -41,9 +42,33 @@ impl fmt::Display for SourceEntry {
             }
 
             fmt.write_str(if self.source { "deb-src " } else { "deb " })?;
+
+            // Re-add the options that were removed during parsing
+            let mut options = Cow::from(&self.options);
+            if self.trusted {
+                options
+                    .to_mut()
+                    .push(("trusted".to_string(), vec!["yes".to_string()]));
+            }
+
+            if self.archs.is_some() {
+                options
+                    .to_mut()
+                    .push(("arch".to_string(), self.archs.as_ref().unwrap().clone()));
+            }
+
+            if let Some(Signature::KeyPath(keys)) = &self.signed_by {
+                options.to_mut().push((
+                    "signed-by".to_string(),
+                    keys.iter()
+                        .filter_map(|x| x.to_str().and_then(|s| Some(s.to_owned())))
+                        .collect(),
+                ));
+            }
+
             let mut options_string = vec![];
-            if !self.options.is_empty() {
-                for (k, v) in &self.options {
+            if !options.is_empty() {
+                for (k, v) in options.iter() {
                     options_string.push(format!("{k}={}", v.join(",")));
                 }
             }
