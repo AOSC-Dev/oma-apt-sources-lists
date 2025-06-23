@@ -11,7 +11,7 @@ edition = "2021"
 
 [dependencies]
 thiserror = "2"
-deb822-lossless = { version = "0.2", features = ["derive"] }
+deb822-fast = { version = "0.2", features = ["derive"] }
 url = "2.5"
 
 [dev-dependencies]

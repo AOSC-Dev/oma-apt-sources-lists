@@ -5,7 +5,7 @@
 // allows partial parsing, parsing files with errors and unknown fields and editing while
 // preserving formatting.
 
-use deb822_lossless::{FromDeb822, FromDeb822Paragraph, ToDeb822, ToDeb822Paragraph};
+use deb822_fast::{FromDeb822, FromDeb822Paragraph, Paragraph, ToDeb822, ToDeb822Paragraph};
 use error::RepositoryError;
 use signature::Signature;
 use std::result::Result;
@@ -276,12 +276,11 @@ impl std::str::FromStr for Repositories {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let deb822: deb822_lossless::Deb822 = s
-            .parse()
-            .map_err(|e: deb822_lossless::ParseError| e.to_string())?;
+        let deb822: deb822_fast::Deb822 =
+            s.parse().map_err(|e: deb822_fast::Error| e.to_string())?;
 
         let repos = deb822
-            .paragraphs()
+            .into_iter()
             .map(|p| Repository::from_paragraph(&p))
             .collect::<Result<Vec<Repository>, Self::Err>>()?;
         Ok(Repositories(repos))
@@ -293,7 +292,7 @@ impl ToString for Repositories {
         self.0
             .iter()
             .map(|r| {
-                let p: deb822_lossless::lossy::Paragraph = r.to_paragraph();
+                let p: Paragraph = r.to_paragraph();
                 p.to_string()
             })
             .collect::<Vec<_>>()
@@ -330,7 +329,7 @@ mod tests {
         //assert_eq!(ret.unwrap_err(), "Not machine readable".to_string());
         assert_eq!(
             ret.unwrap_err(),
-            "expected ':', got Some(NEWLINE)\n".to_owned()
+            "Unexpected token:  ".to_owned()
         );
     }
 

@@ -1,6 +1,6 @@
 use std::{fmt, ops::Deref, str::FromStr};
 
-use deb822_lossless::{Paragraph, ToDeb822Paragraph};
+use deb822_fast::{Paragraph, ToDeb822Paragraph};
 
 use crate::{
     deb822::{Repositories, RepositoryType},
@@ -77,7 +77,7 @@ impl FromStr for SourceListDeb822 {
                             components: source.components.clone().unwrap_or(vec![]),
                             is_deb822: true,
                             options: p
-                                .items()
+                                .iter()
                                 .filter(|x| {
                                     ![
                                         "Enabled",
@@ -89,11 +89,11 @@ impl FromStr for SourceListDeb822 {
                                         "Signed-By",
                                         "Trusted",
                                     ]
-                                    .contains(&x.0.as_str())
+                                    .contains(&x.0)
                                 })
                                 .map(|x| {
                                     (
-                                        x.0,
+                                        x.0.to_string(),
                                         x.1.split_ascii_whitespace()
                                             .map(|x| x.to_string())
                                             .collect::<Vec<_>>(),
