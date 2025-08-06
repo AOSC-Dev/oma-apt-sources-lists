@@ -372,6 +372,7 @@ mod tests {
             Suites: noble
             Components: stable
             Architectures: arm64
+            Trusted: yes
             Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
         "#
         );
