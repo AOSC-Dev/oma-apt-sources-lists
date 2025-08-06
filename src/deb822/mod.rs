@@ -218,16 +218,16 @@ pub struct Repository {
     #[deb822(field = "By-Hash")]
     pub by_hash: Option<YesNoForce>,
     /// (Optional) If yes circumvents parts of `apt-secure`, don't thread lightly
-    #[deb822(field = "Allow-Insecure")]
+    #[deb822(field = "Allow-Insecure", deserialize_with = deserialize_yesno)]
     pub allow_insecure: Option<bool>, // TODO: redundant option, not present = default no
     /// (Optional) If yes circumvents parts of `apt-secure`, don't thread lightly
-    #[deb822(field = "Allow-Weak")]
+    #[deb822(field = "Allow-Weak", deserialize_with = deserialize_yesno)]
     pub allow_weak: Option<bool>, // TODO: redundant option, not present = default no
     /// (Optional) If yes circumvents parts of `apt-secure`, don't thread lightly
-    #[deb822(field = "Allow-Downgrade-To-Insecure")]
+    #[deb822(field = "Allow-Downgrade-To-Insecure", deserialize_with = deserialize_yesno)]
     pub allow_downgrade_to_insecure: Option<bool>, // TODO: redundant option, not present = default no
     /// (Optional) If set forces whether APT considers source as rusted or no (default not present is a third state)
-    #[deb822(field = "Trusted")]
+    #[deb822(field = "Trusted", deserialize_with = deserialize_yesno)]
     pub trusted: Option<bool>,
     /// (Optional) Contains either absolute path to GPG keyring or embedded GPG public key block, if not set APT uses all trusted keys;
     /// I can't find example of using with fingerprints
