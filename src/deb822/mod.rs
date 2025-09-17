@@ -67,7 +67,7 @@ impl FromStr for YesNoForce {
     type Err = RepositoryError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
+        match s.to_ascii_lowercase().as_str() {
             "yes" => Ok(Self::Yes),
             "no" => Ok(Self::No),
             "force" => Ok(Self::Force),
@@ -128,7 +128,7 @@ fn deserialize_string_chain(text: &str) -> Result<Vec<String>, String> {
 
 fn deserialize_yesno(text: &str) -> Result<bool, String> {
     // TODO: bad error type
-    match text {
+    match text.to_ascii_lowercase().as_str() {
         "yes" => Ok(true),
         "no" => Ok(false),
         _ => Err("Invalid value for yes/no field".to_owned()),
@@ -327,10 +327,7 @@ mod tests {
         let ret = s.parse::<Repositories>();
         assert!(ret.is_err());
         //assert_eq!(ret.unwrap_err(), "Not machine readable".to_string());
-        assert_eq!(
-            ret.unwrap_err(),
-            "Unexpected token:  ".to_owned()
-        );
+        assert_eq!(ret.unwrap_err(), "Unexpected token:  ".to_owned());
     }
 
     #[test]
