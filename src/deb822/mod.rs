@@ -131,6 +131,9 @@ fn deserialize_yesno(text: &str) -> Result<bool, String> {
     match text.to_ascii_lowercase().as_str() {
         "yes" => Ok(true),
         "no" => Ok(false),
+        // https://github.com/Debian/apt/blob/05fe552b0c61821e5865c5cb224b2ae25247aeab/apt-pkg/contrib/strutl.cc#L844
+        "true" => Ok(true),
+        "false" => Ok(false),
         _ => Err("Invalid value for yes/no field".to_owned()),
     }
 }
