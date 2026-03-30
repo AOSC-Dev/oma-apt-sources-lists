@@ -28,7 +28,7 @@ pub enum SourcesListError {
     BadLine { line: usize, why: SourceError },
     #[error("Failed to open source list at {}: {}", path.display(), why)]
     SourcesListOpen { path: PathBuf, why: io::Error },
-    #[error("Failed to parse deb822 source")]
+    #[error("Failed to parse deb822 source: {why}")]
     Deb822 { path: PathBuf, why: SourceError },
     #[error("Unknown file format for file: {}", path.display())]
     UnknownFile { path: PathBuf },
